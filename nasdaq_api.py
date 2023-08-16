@@ -8,15 +8,28 @@ import pandas as pd
 
 def process_single_response(symbol, response):
     result_dict = {}
-    json_data = json.loads(
-        response
-    )  # Safely convert the string response to a dictionary
+    json_data = json.loads(response)
 
     # Check if the data is available
     if json_data["data"] and "shortInterestTable" in json_data["data"]:
         data = json_data["data"]["shortInterestTable"]["rows"]
         df = pd.DataFrame(data)
-        result_dict[symbol] = {"data": df}
+
+        # Convert 'settlementDate' to datetime type and 'interest' to float
+        df["settlementDate"] = pd.to_datetime(df["settlementDate"])
+        df["interest"] = df["interest"].str.replace(",", "").astype(float)
+
+        # Calculate latest short interest and average short interest
+        latest_short_interest = df.sort_values(by="settlementDate", ascending=False)[
+            "interest"
+        ].iloc[0]
+        average_short_interest = df["interest"].mean()
+
+        result_dict[symbol] = {
+            "data": df,
+            "latest_short_interest": latest_short_interest,
+            "average_short_interest": average_short_interest,
+        }
     else:
         print(f"Data not available for {symbol}")
 
@@ -71,11 +84,17 @@ def get_data_from_nasdaq(symbol="AAPL"):
     response = asyncio.run(get_single_short_interest(symbol))
     result = process_single_response(symbol, response)
 
-    # Display the dataframe
+    # Display the dataframe and the new keys
     for symbol, data_dict in result.items():
         print(f"Results for {symbol}:")
+        print("Data:")
         print(data_dict["data"])
+        print("\nLatest Short Interest:")
+        print(data_dict["latest_short_interest"])
+        print("\nAverage Short Interest:")
+        print(data_dict["average_short_interest"])
         print("-" * 50)
+    return data_dict
 
 
 get_data_from_nasdaq("AAPL")
