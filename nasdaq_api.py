@@ -6,9 +6,6 @@ import random
 import aiohttp
 import pandas as pd
 
-if platform.system() == "Windows":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
 
 def process_single_response(symbol, response):
     result_dict = {}
@@ -85,6 +82,9 @@ async def get_single_short_interest(symbol):
 
 
 def get_data_from_nasdaq(symbol="AAPL"):
+    if platform.system() == "Windows":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
