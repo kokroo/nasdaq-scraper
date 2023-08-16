@@ -6,21 +6,19 @@ import aiohttp
 import pandas as pd
 
 
-def process_responses(stock_symbols, responses):
+def process_single_response(symbol, response):
     result_dict = {}
+    json_data = json.loads(
+        response
+    )  # Safely convert the string response to a dictionary
 
-    for symbol, response in zip(stock_symbols, responses):
-        json_data = json.loads(
-            response
-        )  # Safely convert the string response to a dictionary
-
-        # Check if the data is available
-        if json_data["data"] and "shortInterestTable" in json_data["data"]:
-            data = json_data["data"]["shortInterestTable"]["rows"]
-            df = pd.DataFrame(data)
-            result_dict[symbol] = df
-        else:
-            print(f"Data not available for {symbol}")
+    # Check if the data is available
+    if json_data["data"] and "shortInterestTable" in json_data["data"]:
+        data = json_data["data"]["shortInterestTable"]["rows"]
+        df = pd.DataFrame(data)
+        result_dict[symbol] = df
+    else:
+        print(f"Data not available for {symbol}")
 
     return result_dict
 
@@ -60,32 +58,24 @@ def random_headers():
     return headers
 
 
-async def get_short_interest(stock_symbols=["AAPL"]):
-    async def fetch_single_symbol(symbol):
-        url = f"https://api.nasdaq.com/api/quote/{symbol}/short-interest?assetClass=stocks"
-        headers = random_headers()
+async def get_single_short_interest(symbol):
+    url = f"https://api.nasdaq.com/api/quote/{symbol}/short-interest?assetClass=stocks"
+    headers = random_headers()
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers) as response:
-                return await response.text()
-
-    results = await asyncio.gather(
-        *(fetch_single_symbol(symbol) for symbol in stock_symbols)
-    )
-    return results
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            return await response.text()
 
 
-def main():
-    symbols = ["AAPL", "TSLA", "AMZN", "GOOG", "NVDA", "PLTR"]
-    responses = asyncio.run(get_short_interest(symbols))
+def get_data_from_nasdaq(symbol="AAPL"):
+    response = asyncio.run(get_single_short_interest(symbol))
+    result = process_single_response(symbol, response)
 
-    results = process_responses(symbols, responses)
-
-    # Display the dataframes
-    for symbol, df in results.items():
+    # Display the dataframe
+    for symbol, df in result.items():
         print(f"Results for {symbol}:")
         print(df)
         print("-" * 50)
 
 
-main()
+get_data_from_nasdaq("AAPL")
