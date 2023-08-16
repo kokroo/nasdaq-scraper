@@ -81,20 +81,25 @@ async def get_single_short_interest(symbol):
 
 
 def get_data_from_nasdaq(symbol="AAPL"):
-    response = asyncio.run(get_single_short_interest(symbol))
-    result = process_single_response(symbol, response)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
-    # Display the dataframe and the new keys
-    for symbol, data_dict in result.items():
-        print(f"Results for {symbol}:")
-        print("Data:")
-        print(data_dict["data"])
-        print("\nLatest Short Interest:")
-        print(data_dict["latest_short_interest"])
-        print("\nAverage Short Interest:")
-        print(data_dict["average_short_interest"])
-        print("-" * 50)
-    return data_dict
+    try:
+        response = loop.run_until_complete(get_single_short_interest(symbol))
+        result = process_single_response(symbol, response)
+
+        # Display the dataframe and the new keys
+        for symbol, data_dict in result.items():
+            print(f"Results for {symbol}:")
+            print("Data:")
+            print(data_dict["data"])
+            print("\nLatest Short Interest:")
+            print(data_dict["latest_short_interest"])
+            print("\nAverage Short Interest:")
+            print(data_dict["average_short_interest"])
+            print("-" * 50)
+    finally:
+        loop.close()
 
 
 get_data_from_nasdaq("AAPL")
