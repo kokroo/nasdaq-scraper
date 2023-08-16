@@ -1,9 +1,13 @@
 import asyncio
 import json
+import platform
 import random
 
 import aiohttp
 import pandas as pd
+
+if platform.system() == "Windows":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 def process_single_response(symbol, response):
