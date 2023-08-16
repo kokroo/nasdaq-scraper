@@ -16,7 +16,7 @@ def process_single_response(symbol, response):
     if json_data["data"] and "shortInterestTable" in json_data["data"]:
         data = json_data["data"]["shortInterestTable"]["rows"]
         df = pd.DataFrame(data)
-        result_dict[symbol] = df
+        result_dict[symbol] = {"data": df}
     else:
         print(f"Data not available for {symbol}")
 
@@ -72,9 +72,9 @@ def get_data_from_nasdaq(symbol="AAPL"):
     result = process_single_response(symbol, response)
 
     # Display the dataframe
-    for symbol, df in result.items():
+    for symbol, data_dict in result.items():
         print(f"Results for {symbol}:")
-        print(df)
+        print(data_dict["data"])
         print("-" * 50)
 
 
